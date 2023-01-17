@@ -1,68 +1,61 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { StatusBar } from 'expo-status-bar';
 import { Keyboard, ScrollView, StyleSheet, Text, View, Button, Alert, TextInput } from 'react-native';
 
 export default function App() {
-  const [result, setResult] = useState('');
-  const [x, setX] = useState('');
-  const [y, setY] = useState('');
+  const [info, setInfo] = useState('Guess a number between 1-100');
+  const [number, setNumber] = useState('');
+  const [userGuess, setUserGuess] = useState('');
+  const [again, setAgain] = useState(false);
+  const [guessesNumber, setGuessesNumber] = useState(1);
 
-  const checkValues = () => {
-    let check = true;
-    if (isNaN(x) && !isNaN(y)) {
-      check = false;
-      setResult('Type the first value please')
-    } else if (!isNaN(x) && isNaN(y)) {
-      check = false;
-      setResult('Type the second value please')
-    } else if (isNaN(x) && isNaN(y)) {
-      check = false;
-      setResult('Type the values please')
-    }
-    return (check);
+  const makeRandomNumber = () => {
+    setNumber(Math.floor(Math.random() * 100) + 1);
   }
 
-  const makeMinus = () => {
-    let check = checkValues();
-    if (check) {
-      setResult(`Result: ${x - y}`);
+  useEffect(() => {
+    makeRandomNumber();
+  }, []);
+
+  const makeGuess = () => {
+    if (isNaN(userGuess)) {
+      setInfo('Please type your number');
+    } else {
+      setGuessesNumber(prevValue => prevValue + 1);
+      if (userGuess === number) {
+        Alert.alert(`You guessed the number in ${guessesNumber} guesses`);
+        setInfo(`You guessed the number (${number}) in ${guessesNumber} guesses`);
+        setAgain(true);
+      } else if (userGuess < number) {
+        setInfo(`Your guess ${userGuess} is too low`);
+      } else {
+        setInfo(`Your guess ${userGuess} is too high`);
+      }
     }
   }
 
-  const makePlus = () => {
-    if (checkValues()) {
-      setResult(`Result: ${x + y}`);
-    }
-  }
-
-  const clearAll = () => {
-    Keyboard.dismiss();
-    setResult('');
-    setX('');
-    setY('');
+  const startAgain = () => {
+    setAgain(false);
+    makeRandomNumber();
+    setInfo('Guess a number between 1-100');
+    setGuessesNumber(1);
+    setUserGuess('');
   }
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps='handled'>
-      <Text>{result}</Text>
+      <Text>{info}</Text>
       <TextInput
+        editable={!again}
         style={styles.textfield}
-        onChangeText={currValue => setX(parseInt(currValue))}
-        value={x}
+        onChangeText={currValue => setUserGuess(parseInt(currValue))}
+        value={userGuess}
         keyboardType='numeric'
       />
-      <TextInput
-        keyboardType='numeric'
-        style={styles.textfield}
-        onChangeText={currValue => setY(parseInt(currValue))}
-        value={y}
-      />
-      <View style={{ flexDirection: 'row' }}>
-        <Button onPress={makePlus} title='+' />
-        <Button onPress={makeMinus} title='-' />
-      </View>
-      <Button onPress={clearAll} title='Clear' />
+      {!again && <Button onPress={makeGuess} title='Make Guess' />}
+      {again && <Button onPress={startAgain} title='Start Again' />}
+
       <StatusBar style="auto" />
     </ScrollView>
   );
@@ -79,7 +72,7 @@ const styles = StyleSheet.create({
   textfield:
   {
     height: 30,
-    width: 200,
+    width: 50,
     borderColor: 'gray',
     borderWidth: 1
   }
